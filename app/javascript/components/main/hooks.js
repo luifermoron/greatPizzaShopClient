@@ -1,32 +1,42 @@
 import React, { useState, useEffect } from "react";
 
-const productsByCategoryId = (products, id) => {
+export const filterByCategoryID = (items, id) => {
+    if (isNaN(id)) return undefined;
+
     if (id === 0) return [];
 
-    return clearChecks(products.filter(product => {
-        const { categories } = product;
+    return items.filter(item => {
+        const { categories } = item;
         return categories.some(category => category.id === id)
-    }), 0);
+    });
 }
 
-const clearChecks = (products, id) => {
-    return products.map(product => { return { ...product, tableData: { checked: product.id === id ? true : false } } });
+export const filterByTypeProperty = (items, type_property) => {
+    if (type_property === 0) return [];
+    return items.filter(item => item.type_property === type_property);
 }
 
-export const useProducts = () => {
-    const [products, updateProducts] = useState({ all: [], selected: [] });
 
-    const updateAllProducts = (products) => {
-        updateProducts({ all: [...products], selected: [] });
+const clearChecks = (items, id) => {
+    return items.map(item => { return { ...item, tableData: { checked: item.id === id ? true : false } } });
+}
+
+export const useItems = (filterByFunction, multipleSelection = true) => {
+    const [items, updateItems] = useState({ all: [], selected: [] });
+
+    const updateAll = (items) => {
+        updateItems({ all: [...items], selected: [] });
     }
 
-    const updateSelectedProducts = (all, categoryId) => {
-        updateProducts({ all: [...all], selected: productsByCategoryId(all, categoryId) });
+    const updateSelected = (all, categoryId) => {
+        const filteredItems = filterByFunction(all, categoryId);
+        if (filteredItems)
+            updateItems({ all: [...all], selected: multipleSelection ? clearChecks(filteredItems, 0) : filteredItems });
     }
 
-    const updateCheckProducts = (product) => {
-        updateProducts({ all: products.all, selected: clearChecks(products.selected, product.id) });
+    const updateCheck = (item) => {
+        updateItems({ all: items.all, selected: multipleSelection ? clearChecks(items.selected, item.id) : items.selected });
     }
 
-    return { products, updateAllProducts, updateSelectedProducts, updateCheckProducts };
+    return { items, updateAll, updateSelected, updateCheck };
 }
