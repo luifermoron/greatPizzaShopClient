@@ -7,7 +7,7 @@ export const CATEGORIES = API_VERSION + "/categories/";
 export const PROCESS_ORDER = API_VERSION + "/orders/";
 
 
-export const MENU_TITLE = "Menu";
+export const MENU_TITLE = "1) Select a product,then customize it";
 export const MENU_CHIP_ID = "id";
 export const MENU_CHIP_COLOR = "primary";
 export const MENU_CHIP_LABEL_NAME = "name";
@@ -17,7 +17,7 @@ export const MENU_COLUMNS = [
     { title: 'Description', field: 'description' },
 ];
 
-
+export const PRODUCT_CUSTOMIZATION_MENU_TITLE = "2) Customize your product";
 export const PRODUCT_CUSTOMIZATION_CHIP_ID = "type_property";
 export const PRODUCT_CUSTOMIZATION_CHIP_COLOR = "secondary";
 export const PRODUCT_CUSTOMIZATION_CHIP_LABEL_NAME = "type_property";

@@ -12,45 +12,74 @@ import SelectableChipTable from "../selectable_chip_table/SelectableChipTable";
 
 
 import { MENU_TITLE, MENU_CHIP_ID, MENU_CHIP_LABEL_NAME, MENU_CHIP_COLOR, MENU_COLUMNS } from "../../constants/Constants";
-import { PRODUCT_CUSTOMIZATION_CHIP_ID, PRODUCT_CUSTOMIZATION_CHIP_LABEL_NAME, PRODUCT_CUSTOMIZATION_CHIP_COLOR, PRODUCT_CUSTOMIZATION_COLUMNS } from "../../constants/Constants";
+import { PRODUCT_CUSTOMIZATION_MENU_TITLE, PRODUCT_CUSTOMIZATION_CHIP_ID, PRODUCT_CUSTOMIZATION_CHIP_LABEL_NAME, PRODUCT_CUSTOMIZATION_CHIP_COLOR, PRODUCT_CUSTOMIZATION_COLUMNS } from "../../constants/Constants";
 
 import { fetchAll } from "../../api/api";
-import { useItems, filterByCategoryID, filterByTypeProperty } from "../main/hooks";
-import { container, column } from "./styles";
+import { useItems, useOrders, filterByCategoryID, filterByTypeProperty } from "../main/hooks";
+import { container, column, row } from "./styles";
 
 
-const customizeProduct = (evt, data) => {
-  alert('You want to delete ' + data.length + ' rows');
+const customizeProduct = (evt, products, setEditingProduct) => {
+  if (products.length > 0)
+    setEditingProduct(products[0]);
 }
 
 
-const addProductToOrderDetail = (evt, data) => {
-  alert('You want to delete ' + data.length + ' rows');
+const addProductToOrderDetail = (editingProduct, editingQuantity, allProductProperties, addOrder, reInit) => {
+  if (editingProduct.id && editingQuantity > 0) {
+    /*const product_type = editingProduct.product_type.label;
+    console.log(product_type);
+    console.log(selectedProductProperties);
+    console.log(editingQuantity);*/
+    const selectedProductProperties = allProductProperties.filter(p => p.tableData && p.tableData.checked);
+
+    addOrder({
+      product: editingProduct,
+      properties: selectedProductProperties,
+      quantity: editingQuantity
+    });
+    reInit();
+  }
 }
 
 const Main = () => {
+  const { orders, addOrder } = useOrders([]);
+  const [editingProduct, setEditingProduct] = useState({});
+  const [editingQuantity, setEditingQuantity] = useState(1);
   const [categories, setCategories] = useState([]);
   const [typeProperties, setTypeProperties] = useState([]);
 
-  const { items: products, 
-          updateAll: updateAllProducts, 
-          updateSelected: updateSelectedProducts, 
-          updateCheck: updateCheckProducts 
-        } = useItems(filterByCategoryID);
+  const { items: products,
+    updateAll: updateAllProducts,
+    updateSelected: updateSelectedProducts,
+    updateCheck: updateCheckProducts,
+    unCheckAll: unCheckProducts,
+  } = useItems(filterByCategoryID);
 
-  const { items: productProperties, 
-          updateAll: updateAllProductProperties, 
-          updateSelected: updateSelectedProductProperties, 
-          updateCheck: updateCheckProductProperties 
-        } = useItems(filterByTypeProperty, false);
+  const { items: productProperties,
+    updateAll: updateAllProductProperties,
+    updateSelected: updateSelectedProductProperties,
+    updateCheck: updateCheckProductProperties,
+    unCheckAll: unCheckProductProperties,
+  } = useItems(filterByTypeProperty, false);
 
-  useEffect(() => { fetchAll(setCategories, updateAllProducts, updateSelectedProducts, 
-                             setTypeProperties, updateAllProductProperties, updateSelectedProductProperties); 
-                  }, []);
+
+  const reInit = () => {
+    setEditingQuantity(1);
+    setEditingProduct({});
+    unCheckProducts();
+    unCheckProductProperties();
+  }
+
+  useEffect(() => {
+    fetchAll(setCategories, updateAllProducts, updateSelectedProducts,
+      setTypeProperties, updateAllProductProperties, updateSelectedProductProperties);
+  }, []);
 
   return (
     <div style={container}>
       <div style={column}>
+        <h2>Menu: </h2>
         <SelectableChipTable
           title={MENU_TITLE}
           columns={MENU_COLUMNS}
@@ -61,20 +90,68 @@ const Main = () => {
           items={products}
           updateSelected={updateSelectedProducts}
           updateCheck={updateCheckProducts}
-          onAddPressed={customizeProduct}
+          onAddPressed={(evt, products) => customizeProduct(evt, products, setEditingProduct)}
         />
-        <SelectableChipTable
-          title={"menu"}
-          columns={PRODUCT_CUSTOMIZATION_COLUMNS}
-          chipId={PRODUCT_CUSTOMIZATION_CHIP_ID}
-          chipLabelName={PRODUCT_CUSTOMIZATION_CHIP_LABEL_NAME}
-          chipColor={PRODUCT_CUSTOMIZATION_CHIP_COLOR}
-          categories={typeProperties}
-          items={productProperties}
-          updateSelected={updateSelectedProductProperties}
-          updateCheck={updateCheckProductProperties}
-          onAddPressed={addProductToOrderDetail}
-        />
+        {
+          editingProduct.name &&
+          (
+            <div style={row}>
+              <SelectableChipTable
+                title={PRODUCT_CUSTOMIZATION_MENU_TITLE}
+                columns={PRODUCT_CUSTOMIZATION_COLUMNS}
+                chipId={PRODUCT_CUSTOMIZATION_CHIP_ID}
+                chipLabelName={PRODUCT_CUSTOMIZATION_CHIP_LABEL_NAME}
+                chipColor={PRODUCT_CUSTOMIZATION_CHIP_COLOR}
+                categories={typeProperties}
+                items={productProperties}
+                updateSelected={updateSelectedProductProperties}
+                updateCheck={updateCheckProductProperties}
+                onAddPressed={addProductToOrderDetail}
+              />
+              <div style={column}>
+                <h3>Product name: {editingProduct.name || 'NO PRODUCT SELECTED'} </h3>
+                <div style={row}>
+                  <p>Quantity: </p>
+                  <TextField
+                    variant="outlined"
+                    size="small"
+                    type="number"
+                    value={editingQuantity}
+                    onChange={(object) => setEditingQuantity(object.target.value)}
+                  />
+                </div>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  size="small"
+                  onClick={() => addProductToOrderDetail(editingProduct, editingQuantity, productProperties.all,
+                    addOrder, reInit)}
+                > Add product to Store</Button>
+              </div>
+            </div>
+          )
+        }
+      </div>
+      <div style={column}>
+        <h2>Order detail: </h2>
+        <ul>
+          {
+            orders.map(order => {
+              return (<li>{order.product.name}
+                <ul>
+                  <li>Quantity: {order.quantity}</li>
+                  <li>Product Properties: {order.properties.map(p => p.label).join(",")} </li>
+                </ul>
+              </li>)
+            })
+          }
+        </ul>
+        <Button
+          variant="contained"
+          color="primary"
+          size="big"
+        > ORDER NOW</Button>
+        <p></p>
       </div>
     </div>
   );

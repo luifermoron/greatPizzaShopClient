@@ -16,9 +16,22 @@ export const filterByTypeProperty = (items, type_property) => {
     return items.filter(item => item.type_property === type_property);
 }
 
+const unCheck = (items) => {
+    return items.map(item => { return { ...item, tableData: { checked: false } } });
+}
 
-const clearChecks = (items, id) => {
+const clearChecksExceptBy = (items, id) => {
     return items.map(item => { return { ...item, tableData: { checked: item.id === id ? true : false } } });
+}
+
+
+export const useOrders = () => {
+    const [orders, setOrders] = useState([]);
+
+    const addOrder = (object) => {
+        setOrders([...orders, object]);
+    }
+    return { orders, addOrder };
 }
 
 export const useItems = (filterByFunction, multipleSelection = true) => {
@@ -31,12 +44,16 @@ export const useItems = (filterByFunction, multipleSelection = true) => {
     const updateSelected = (all, categoryId) => {
         const filteredItems = filterByFunction(all, categoryId);
         if (filteredItems)
-            updateItems({ all: [...all], selected: multipleSelection ? clearChecks(filteredItems, 0) : filteredItems });
+            updateItems({ all: [...all], selected: multipleSelection ? clearChecksExceptBy(filteredItems, 0) : filteredItems });
     }
 
     const updateCheck = (item) => {
-        updateItems({ all: items.all, selected: multipleSelection ? clearChecks(items.selected, item.id) : items.selected });
+        updateItems({ all: items.all, selected: multipleSelection ? clearChecksExceptBy(items.selected, item.id) : items.selected });
     }
 
-    return { items, updateAll, updateSelected, updateCheck };
+    const unCheckAll = () => {
+        updateItems({ all: unCheck(items.all), selected: unCheck(items.selected) });
+    }
+
+    return { items, updateAll, updateSelected, updateCheck, unCheckAll };
 }
