@@ -25,7 +25,7 @@ const customizeProduct = (evt, products, setEditingProduct) => {
 const addProductToOrderDetail = (editingProduct, editingQuantity, allProductProperties, addOrder, reInit) => {
   if (editingProduct.id && editingQuantity > 0) {
     const selectedProductProperties = allProductProperties.filter(p => p.tableData && p.tableData.checked);
-
+    
     addOrder({
       product: {
         name: editingProduct.name,
@@ -94,7 +94,11 @@ const Main = () => {
               {
                   tooltip: 'Add',
                   icon: () => <AddBox />,
-                  onClick: (evt, products) => customizeProduct(evt, products, setEditingProduct)
+                  onClick: (evt, products) => 
+                  {
+                    updateSelectedProductProperties(productProperties.all, typeProperties.length > 0 ? typeProperties[0].type_property : 0);
+                    customizeProduct(evt, products, setEditingProduct)
+                  }
               }
           ]}
         />
@@ -129,8 +133,10 @@ const Main = () => {
                   variant="contained"
                   color="secondary"
                   size="small"
-                  onClick={() => addProductToOrderDetail(editingProduct, editingQuantity, productProperties.all,
-                    addOrder, reInit)}
+                  onClick={() => 
+                    {
+                      addProductToOrderDetail(editingProduct, editingQuantity, productProperties.all,
+                    addOrder, reInit);}}
                 > Add product to Store</Button>
               </div>
             </div>
