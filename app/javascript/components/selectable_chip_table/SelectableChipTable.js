@@ -1,6 +1,5 @@
 import React from "react";
 import MaterialTable from 'material-table'
-import AddBox from "@material-ui/icons/AddBox";
 import ChipsToolbar from "../chips_toolbar/ChipsToolbar";
 
 const handleSelectionChange = (clickedRow, updateCheck) => {
@@ -8,7 +7,7 @@ const handleSelectionChange = (clickedRow, updateCheck) => {
 }
 
 const SelectableChipTable = (props) => {
-    const { title, columns, chipId, chipLabelName, chipColor, categories, items, updateSelected, updateCheck, onAddPressed } = props;
+    const { title, actions, columns, chipId, chipLabelName, chipColor, categories, items, updateSelected, updateCheck } = props;
     return (
         <MaterialTable
             title={title}
@@ -32,13 +31,7 @@ const SelectableChipTable = (props) => {
                         updateSelectedItems={updateSelected}
                     />),
             }}
-            actions={[
-                {
-                    tooltip: 'Add',
-                    icon: () => <AddBox />,
-                    onClick: onAddPressed
-                }
-            ]}
+            actions={actions}
         />
     );
 }

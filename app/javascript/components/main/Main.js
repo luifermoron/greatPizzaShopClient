@@ -1,10 +1,7 @@
-import React, { useState, useEffect, forwardRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState, useEffect } from "react";
 
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import Chip from '@material-ui/core/Chip';
-import MaterialTable, { MTableToolbar } from 'material-table'
 import AddBox from "@material-ui/icons/AddBox";
 
 
@@ -15,6 +12,7 @@ import { MENU_TITLE, MENU_CHIP_ID, MENU_CHIP_LABEL_NAME, MENU_CHIP_COLOR, MENU_C
 import { PRODUCT_CUSTOMIZATION_MENU_TITLE, PRODUCT_CUSTOMIZATION_CHIP_ID, PRODUCT_CUSTOMIZATION_CHIP_LABEL_NAME, PRODUCT_CUSTOMIZATION_CHIP_COLOR, PRODUCT_CUSTOMIZATION_COLUMNS } from "../../constants/Constants";
 
 import { fetchAll } from "../../api/api";
+import { orderProcess } from "../../simulator/simulator";
 import { useItems, useOrders, filterByCategoryID, filterByTypeProperty } from "../main/hooks";
 import { container, column, row } from "./styles";
 
@@ -24,18 +22,16 @@ const customizeProduct = (evt, products, setEditingProduct) => {
     setEditingProduct(products[0]);
 }
 
-
 const addProductToOrderDetail = (editingProduct, editingQuantity, allProductProperties, addOrder, reInit) => {
   if (editingProduct.id && editingQuantity > 0) {
-    /*const product_type = editingProduct.product_type.label;
-    console.log(product_type);
-    console.log(selectedProductProperties);
-    console.log(editingQuantity);*/
     const selectedProductProperties = allProductProperties.filter(p => p.tableData && p.tableData.checked);
 
     addOrder({
-      product: editingProduct,
-      properties: selectedProductProperties,
+      product: {
+        name: editingProduct.name,
+        product_type: editingProduct.product_type,
+        properties: selectedProductProperties,
+      },
       quantity: editingQuantity
     });
     reInit();
@@ -43,11 +39,13 @@ const addProductToOrderDetail = (editingProduct, editingQuantity, allProductProp
 }
 
 const Main = () => {
-  const { orders, addOrder } = useOrders([]);
+  const { orders, addOrder, reInitOrder } = useOrders([]);
   const [editingProduct, setEditingProduct] = useState({});
   const [editingQuantity, setEditingQuantity] = useState(1);
   const [categories, setCategories] = useState([]);
   const [typeProperties, setTypeProperties] = useState([]);
+
+  const [print, setPrint] = useState("");
 
   const { items: products,
     updateAll: updateAllProducts,
@@ -67,6 +65,7 @@ const Main = () => {
   const reInit = () => {
     setEditingQuantity(1);
     setEditingProduct({});
+    setPrint("");
     unCheckProducts();
     unCheckProductProperties();
   }
@@ -90,7 +89,14 @@ const Main = () => {
           items={products}
           updateSelected={updateSelectedProducts}
           updateCheck={updateCheckProducts}
-          onAddPressed={(evt, products) => customizeProduct(evt, products, setEditingProduct)}
+          actions={
+            [
+              {
+                  tooltip: 'Add',
+                  icon: () => <AddBox />,
+                  onClick: (evt, products) => customizeProduct(evt, products, setEditingProduct)
+              }
+          ]}
         />
         {
           editingProduct.name &&
@@ -106,7 +112,6 @@ const Main = () => {
                 items={productProperties}
                 updateSelected={updateSelectedProductProperties}
                 updateCheck={updateCheckProductProperties}
-                onAddPressed={addProductToOrderDetail}
               />
               <div style={column}>
                 <h3>Product name: {editingProduct.name || 'NO PRODUCT SELECTED'} </h3>
@@ -140,7 +145,7 @@ const Main = () => {
               return (<li>{order.product.name}
                 <ul>
                   <li>Quantity: {order.quantity}</li>
-                  <li>Product Properties: {order.properties.map(p => p.label).join(",")} </li>
+                  <li>Product Properties: {order.product.properties.map(p => p.label).join(",")} </li>
                 </ul>
               </li>)
             })
@@ -150,8 +155,9 @@ const Main = () => {
           variant="contained"
           color="primary"
           size="big"
+          onClick={() => orderProcess(orders, reInitOrder, setPrint)}
         > ORDER NOW</Button>
-        <p></p>
+        <p  dangerouslySetInnerHTML={{ __html: print }}></p>
       </div>
     </div>
   );

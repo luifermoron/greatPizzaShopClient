@@ -31,7 +31,11 @@ export const useOrders = () => {
     const addOrder = (object) => {
         setOrders([...orders, object]);
     }
-    return { orders, addOrder };
+    
+    const reInitOrder = () => {
+        setOrders([]);
+    }
+    return { orders, addOrder, reInitOrder };
 }
 
 export const useItems = (filterByFunction, multipleSelection = true) => {
